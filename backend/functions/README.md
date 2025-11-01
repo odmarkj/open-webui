@@ -75,6 +75,42 @@ requirements: package1,package2
 """
 ```
 
+## Managing Dependencies
+
+### Global Dependencies (requirements.txt)
+
+For packages needed by multiple functions, create a `requirements.txt` file:
+
+```bash
+# Copy the example file
+cp requirements.txt.example requirements.txt
+
+# Add your dependencies
+echo "requests==2.31.0" >> requirements.txt
+echo "openai>=1.0.0" >> requirements.txt
+```
+
+Packages listed in `requirements.txt` will be automatically installed when Open WebUI starts.
+
+**Example requirements.txt:**
+```
+requests==2.31.0
+openai>=1.0.0
+pydantic==2.5.0
+```
+
+### Function-Specific Dependencies
+
+Individual functions can also specify dependencies in their frontmatter:
+```python
+"""
+title: My Function
+requirements: beautifulsoup4,lxml
+"""
+```
+
+Both `requirements.txt` (global) and frontmatter requirements (per-function) will be installed.
+
 ## Configuration with Valves
 
 Define configurable parameters:

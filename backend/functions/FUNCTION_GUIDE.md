@@ -111,6 +111,38 @@ version: 1.0.0
 """
 ```
 
+### Managing Dependencies
+
+**Global Dependencies (requirements.txt):**
+
+For packages used by multiple functions, create `backend/functions/requirements.txt`:
+
+```bash
+cd backend/functions
+cp requirements.txt.example requirements.txt
+```
+
+Add your dependencies:
+```txt
+requests==2.31.0
+openai>=1.0.0
+anthropic==0.8.0
+pydantic==2.5.0
+```
+
+**Function-Specific Dependencies:**
+
+Add to frontmatter for individual functions:
+```python
+"""
+requirements: textblob,nltk,spacy
+"""
+```
+
+**Installation Order:**
+1. Global `requirements.txt` installed first
+2. Individual function requirements installed next
+
 ---
 
 ## Pipe Functions

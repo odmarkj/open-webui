@@ -147,6 +147,51 @@ Include metadata in triple-quoted docstrings at the start of your file:
 
 Custom fields are also supported and stored in the function metadata.
 
+## Managing Dependencies
+
+### Global Dependencies (requirements.txt)
+
+For packages used by multiple functions, create a `requirements.txt` file in `backend/functions/`:
+
+```bash
+cd backend/functions
+cp requirements.txt.example requirements.txt
+```
+
+Edit the file to add your dependencies:
+
+```txt
+# backend/functions/requirements.txt
+requests==2.31.0
+openai>=1.0.0
+anthropic==0.8.0
+pydantic==2.5.0
+beautifulsoup4==4.12.0
+```
+
+These packages will be automatically installed when Open WebUI starts, **before** individual function requirements are processed.
+
+### Function-Specific Dependencies
+
+Individual functions can specify their own dependencies in frontmatter:
+
+```python
+"""
+title: My Function
+requirements: textblob,nltk
+"""
+```
+
+### Dependency Installation Order
+
+1. **Global**: `backend/functions/requirements.txt` installed first
+2. **Per-function**: Each function's frontmatter `requirements` installed next
+
+This allows you to:
+- Define common dependencies once in `requirements.txt`
+- Add function-specific packages in frontmatter
+- Avoid duplicate package specifications
+
 ## Configuration with Valves
 
 Functions can define configuration parameters using `Valves`:
