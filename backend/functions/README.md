@@ -132,6 +132,8 @@ See the `examples/` subdirectory for working examples:
 ✅ Handle errors gracefully
 ✅ Pin dependency versions
 
-## Need Help?
+## Documentation
 
-See the complete documentation: [FILESYSTEM_FUNCTIONS.md](../../FILESYSTEM_FUNCTIONS.md)
+- **[FUNCTION_GUIDE.md](./FUNCTION_GUIDE.md)** - Complete guide to building functions (Pipe, Filter, Action)
+- **[FILESYSTEM_FUNCTIONS.md](../../FILESYSTEM_FUNCTIONS.md)** - Filesystem-based function management documentation
+- **[examples/](./examples/)** - Working examples for all function types
