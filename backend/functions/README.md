@@ -172,11 +172,22 @@ See [lib/README.md](./lib/README.md) for complete documentation on creating and 
 ## Examples
 
 See the `examples/` subdirectory for working examples:
+
+**Basic Examples:**
 - `echo_pipe.py` - Basic pipe example
 - `sentiment_filter.py` - Filter with dependencies
 - `logger_action.py` - Action with file operations
 - `api_pipe.py` - Advanced pipe with configuration
 - `score_example_pipe.py` - Using shared lib modules
+
+**Advanced Example:**
+- `n8n_workflow_agent.py` - **Full AI agent with tool calling**
+  - Registers as a custom model in UI
+  - Uses vLLM with function calling
+  - Integrates with n8n API
+  - Pydantic-based tool schemas
+  - Multi-step workflow automation
+  - **See [N8N_WORKFLOW_AGENT_GUIDE.md](../N8N_WORKFLOW_AGENT_GUIDE.md) for complete setup**
 
 ## How It Works
 

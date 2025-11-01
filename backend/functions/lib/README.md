@@ -122,6 +122,49 @@ messages = builder.build()
 response = format_response("Result", metadata={"score": 95})
 ```
 
+### `n8n.py`
+n8n API integration with Pydantic models:
+```python
+from lib.n8n import N8nClient, get_n8n_tools
+
+# Create client
+client = N8nClient(
+    base_url="http://localhost:5678",
+    api_key="your-api-key"
+)
+
+# Search nodes
+nodes = client.search_nodes("http")
+
+# Get tool definitions for LLM function calling
+tools = get_n8n_tools()
+```
+
+### `tool_calling.py`
+vLLM tool calling utilities:
+```python
+from lib.tool_calling import VLLMToolCallingClient, ToolExecutor
+
+# Setup executor
+executor = ToolExecutor()
+executor.register_tool("my_tool", my_function)
+
+# Setup vLLM client
+client = VLLMToolCallingClient(
+    base_url="http://localhost:8000/v1",
+    model="hermes-3-llama-3.1-8b"
+)
+
+# Chat with tools
+result = client.chat_with_tools(
+    messages=[{"role": "user", "content": "Hello"}],
+    tools=tool_definitions,
+    tool_executor=executor
+)
+```
+
+**See the [n8n Workflow Agent example](../examples/n8n_workflow_agent.py) for a complete working implementation.**
+
 ## Best Practices
 
 ### 1. Keep Modules Focused
