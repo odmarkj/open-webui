@@ -481,6 +481,7 @@ from open_webui.utils.auth import (
     get_verified_user,
 )
 from open_webui.utils.plugin import install_tool_and_function_dependencies
+from open_webui.utils.filesystem_functions import sync_functions_from_filesystem
 from open_webui.utils.oauth import (
     OAuthManager,
     OAuthClientManager,
@@ -555,6 +556,15 @@ async def lifespan(app: FastAPI):
 
     if LICENSE_KEY:
         get_license_data(app, LICENSE_KEY)
+
+    # Sync functions from filesystem if FUNCTIONS_DIR is configured
+    log.info("Syncing functions from filesystem...")
+    sync_results = sync_functions_from_filesystem()
+    if sync_results["scanned"] > 0:
+        log.info(
+            f"Filesystem sync: {sync_results['created']} created, "
+            f"{sync_results['updated']} updated, {sync_results['unchanged']} unchanged"
+        )
 
     # This should be blocking (sync) so functions are not deactivated on first /get_models calls
     # when the first user lands on the / route.
