@@ -1,0 +1,6 @@
+# Ignore all Python files in this directory
+*.py
+
+# But keep the examples
+!examples/
+!examples/**/*.py
