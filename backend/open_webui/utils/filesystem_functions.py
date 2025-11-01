@@ -207,6 +207,11 @@ def sync_functions_from_filesystem(system_user_id: str = "system") -> Dict[str, 
     # Import here to avoid circular dependency
     from open_webui.models.functions import Functions, FunctionForm, FunctionMeta
 
+    # Add FUNCTIONS_DIR to sys.path so functions can import from lib/
+    if FUNCTIONS_DIR.exists() and str(FUNCTIONS_DIR) not in sys.path:
+        sys.path.insert(0, str(FUNCTIONS_DIR))
+        log.info(f"Added {FUNCTIONS_DIR} to sys.path for module imports")
+
     # Install dependencies from requirements.txt if present
     try:
         install_requirements_txt()

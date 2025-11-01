@@ -4,6 +4,11 @@
 # Ignore user-specific requirements
 requirements.txt
 
-# But keep the examples
+# But keep package files and shared libraries
+!__init__.py
+!lib/
+!lib/**/*.py
+
+# And keep the examples
 !examples/
 !examples/**/*.py
