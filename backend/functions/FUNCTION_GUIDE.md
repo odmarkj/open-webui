@@ -143,6 +143,57 @@ requirements: textblob,nltk,spacy
 1. Global `requirements.txt` installed first
 2. Individual function requirements installed next
 
+### Shared Library Modules
+
+Create reusable code in the `lib/` directory:
+
+**Create a shared module:**
+```bash
+cd backend/functions/lib
+touch my_module.py
+```
+
+**Define your classes/functions:**
+```python
+# lib/my_module.py
+
+class DataProcessor:
+    def __init__(self):
+        self.cache = {}
+
+    def process(self, data: str) -> str:
+        # Your processing logic
+        return data.upper()
+
+def format_output(text: str) -> dict:
+    return {"formatted": text}
+```
+
+**Import in your functions:**
+```python
+# backend/functions/my_pipe.py
+"""
+title: My Pipe
+"""
+
+from lib.my_module import DataProcessor, format_output
+
+class Pipe:
+    def __init__(self):
+        self.processor = DataProcessor()
+
+    def pipe(self, body: dict, __user__: dict) -> dict:
+        message = body["messages"][-1]["content"]
+        result = self.processor.process(message)
+        return format_output(result)
+```
+
+**Included modules:**
+- `lib/score.py` - Scoring and rating classes
+- `lib/utils.py` - Common utilities (MessageBuilder, extract_user_message, etc.)
+
+See [lib/README.md](./lib/README.md) for complete documentation.
+
 ---
 
 ## Pipe Functions

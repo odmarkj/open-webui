@@ -130,6 +130,45 @@ class Pipe:
         return "response"
 ```
 
+## Shared Library Modules
+
+Create reusable modules in the `lib/` directory that can be imported by your functions:
+
+```bash
+# Create a shared module
+cd lib
+touch my_module.py
+```
+
+```python
+# lib/my_module.py
+class MyHelper:
+    def process(self, data):
+        return f"Processed: {data}"
+```
+
+```python
+# my_function.py
+"""
+title: My Function
+"""
+
+from lib.my_module import MyHelper
+
+class Pipe:
+    def __init__(self):
+        self.helper = MyHelper()
+
+    def pipe(self, body: dict, __user__: dict) -> str:
+        return self.helper.process("data")
+```
+
+**Included Modules:**
+- `lib/score.py` - Scoring and rating functionality
+- `lib/utils.py` - Common utilities (message extraction, formatting, etc.)
+
+See [lib/README.md](./lib/README.md) for complete documentation on creating and using shared modules.
+
 ## Examples
 
 See the `examples/` subdirectory for working examples:
@@ -137,6 +176,7 @@ See the `examples/` subdirectory for working examples:
 - `sentiment_filter.py` - Filter with dependencies
 - `logger_action.py` - Action with file operations
 - `api_pipe.py` - Advanced pipe with configuration
+- `score_example_pipe.py` - Using shared lib modules
 
 ## How It Works
 
