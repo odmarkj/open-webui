@@ -145,3 +145,131 @@ def scan_functions_dir() -> List[Dict]:
 
     log.info(f"Scanned {FUNCTIONS_DIR}: found {len(functions)} valid function(s)")
     return functions
+
+
+def sync_functions_from_filesystem(system_user_id: str = "system") -> Dict[str, any]:
+    """
+    Sync functions from FUNCTIONS_DIR to the database.
+
+    This function:
+    1. Scans FUNCTIONS_DIR for function files
+    2. Creates new functions in the database
+    3. Updates existing functions if content has changed
+    4. Marks functions from filesystem as active
+
+    Args:
+        system_user_id: User ID to assign as owner of filesystem functions
+                       (default: "system")
+
+    Returns:
+        Dictionary with sync results:
+        {
+            "scanned": int,     # Number of files scanned
+            "created": int,     # Number of functions created
+            "updated": int,     # Number of functions updated
+            "unchanged": int,   # Number of functions unchanged
+            "errors": list,     # List of errors encountered
+        }
+    """
+    # Import here to avoid circular dependency
+    from open_webui.models.functions import Functions, FunctionForm, FunctionMeta
+
+    if not FUNCTIONS_DIR:
+        log.debug("FUNCTIONS_DIR not configured, skipping sync")
+        return {
+            "scanned": 0,
+            "created": 0,
+            "updated": 0,
+            "unchanged": 0,
+            "errors": [],
+        }
+
+    # Scan filesystem for functions
+    discovered_functions = scan_functions_dir()
+
+    results = {
+        "scanned": len(discovered_functions),
+        "created": 0,
+        "updated": 0,
+        "unchanged": 0,
+        "errors": [],
+    }
+
+    # Track filesystem function IDs to mark them
+    filesystem_function_ids = set()
+
+    # Process each discovered function
+    for func_data in discovered_functions:
+        function_id = func_data["id"]
+        filesystem_function_ids.add(function_id)
+
+        try:
+            # Check if function already exists
+            existing_function = Functions.get_function_by_id(function_id)
+
+            if existing_function:
+                # Check if content has changed
+                if existing_function.content != func_data["content"]:
+                    # Update existing function
+                    Functions.update_function_by_id(
+                        function_id,
+                        {
+                            "name": func_data["name"],
+                            "type": func_data["type"],
+                            "content": func_data["content"],
+                            "meta": func_data["meta"],
+                            "is_active": True,
+                        }
+                    )
+                    results["updated"] += 1
+                    log.info(f"Updated function from filesystem: {function_id}")
+                else:
+                    # Content unchanged, but ensure it's active
+                    if not existing_function.is_active:
+                        Functions.update_function_by_id(
+                            function_id,
+                            {"is_active": True}
+                        )
+                        log.info(f"Reactivated function from filesystem: {function_id}")
+                    results["unchanged"] += 1
+                    log.debug(f"Function unchanged: {function_id}")
+            else:
+                # Create new function
+                form_data = FunctionForm(
+                    id=function_id,
+                    name=func_data["name"],
+                    content=func_data["content"],
+                    meta=FunctionMeta(**func_data["meta"]),
+                )
+
+                new_function = Functions.insert_new_function(
+                    user_id=system_user_id,
+                    type=func_data["type"],
+                    form_data=form_data,
+                )
+
+                if new_function:
+                    # Ensure it's active
+                    Functions.update_function_by_id(function_id, {"is_active": True})
+                    results["created"] += 1
+                    log.info(f"Created new function from filesystem: {function_id}")
+                else:
+                    error_msg = f"Failed to create function: {function_id}"
+                    results["errors"].append(error_msg)
+                    log.error(error_msg)
+
+        except Exception as e:
+            error_msg = f"Error syncing function {function_id}: {str(e)}"
+            results["errors"].append(error_msg)
+            log.error(error_msg)
+
+    # Log summary
+    log.info(
+        f"Filesystem function sync complete: "
+        f"{results['created']} created, "
+        f"{results['updated']} updated, "
+        f"{results['unchanged']} unchanged, "
+        f"{len(results['errors'])} errors"
+    )
+
+    return results
