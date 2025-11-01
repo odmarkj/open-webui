@@ -4,25 +4,29 @@ This feature enables you to manage Open WebUI functions through your filesystem 
 
 ## Overview
 
-When configured, Open WebUI will automatically:
-- Scan a directory for function files (`.py` files)
-- Load them into the database on startup
-- Update functions when file content changes
-- Enable IDE-based development with version control
+Open WebUI automatically scans the `backend/functions/` directory and:
+- Loads function files (`.py` files) into the database on startup
+- Updates functions when file content changes
+- Enables IDE-based development with version control
+- Works alongside web-managed functions
 
-## Configuration
+**No configuration needed** - just drop your `.py` files in `backend/functions/` and restart!
 
-Set the `FUNCTIONS_DIR` environment variable to point to your functions directory:
+## Quick Start
 
-```bash
-export FUNCTIONS_DIR=/path/to/your/functions
-```
+1. **Navigate to the functions directory:**
+   ```bash
+   cd backend/functions
+   ```
 
-Or in your `.env` file:
+2. **Create a function file:**
+   ```bash
+   touch my_pipe.py
+   ```
 
-```env
-FUNCTIONS_DIR=/path/to/your/functions
-```
+3. **Edit with your IDE** (VS Code, vim, etc.)
+
+4. **Restart Open WebUI** - your function is automatically loaded!
 
 ## Function File Structure
 
@@ -198,30 +202,31 @@ class Pipe:
 
 ## Development Workflow
 
-### 1. Create a Functions Directory
+### 1. Create Your Function
 
 ```bash
-mkdir -p /path/to/functions
-```
-
-### 2. Set Environment Variable
-
-```bash
-export FUNCTIONS_DIR=/path/to/functions
-```
-
-### 3. Create Function Files
-
-```bash
-cd /path/to/functions
+cd backend/functions
 touch my_pipe.py
 ```
 
-Edit `my_pipe.py` with your favorite IDE/editor.
+### 2. Edit in Your IDE
 
-### 4. Restart Open WebUI
+Open `backend/functions/my_pipe.py` in VS Code, vim, or any editor:
 
-Functions are loaded on startup:
+```python
+"""
+title: My Custom Pipe
+description: Does something cool
+"""
+
+class Pipe:
+    def pipe(self, body: dict, __user__: dict) -> str:
+        return "Hello from my IDE!"
+```
+
+### 3. Restart Open WebUI
+
+Functions are automatically loaded on startup:
 
 ```bash
 # You'll see logs like:
@@ -231,17 +236,26 @@ Functions are loaded on startup:
 # INFO: Filesystem sync: 1 created, 0 updated, 0 unchanged
 ```
 
-### 5. Iterate and Develop
+### 4. Iterate and Develop
 
 - Edit function files in your IDE
 - Use version control (git)
 - Restart the application to sync changes
 - Changes are automatically detected and updated
 
+### 5. Use Examples as Templates
+
+```bash
+cd backend/functions
+cp examples/echo_pipe.py my_new_function.py
+# Edit my_new_function.py
+# Restart Open WebUI
+```
+
 ## How It Works
 
 ### On Startup:
-1. Open WebUI scans `FUNCTIONS_DIR` for `.py` files
+1. Open WebUI scans `backend/functions/` for `.py` files
 2. Each file is parsed to extract:
    - Function type (Pipe/Filter/Action)
    - Frontmatter metadata
@@ -263,12 +277,11 @@ Functions are loaded on startup:
 
 ## Best Practices
 
-1. **Version Control**: Keep your functions directory in git
+1. **Version Control**: The functions directory is already in your git repo
    ```bash
-   cd /path/to/functions
-   git init
-   git add .
-   git commit -m "Initial functions"
+   cd backend/functions
+   git add my_pipe.py
+   git commit -m "Add my custom pipe"
    ```
 
 2. **Testing**: Test functions locally before deploying
@@ -326,7 +339,7 @@ Common issues:
 - **Invalid filename**: Must be alphanumeric + underscores
 - **No class found**: Must define Pipe, Filter, or Action class
 - **Syntax errors**: Check Python syntax
-- **Missing FUNCTIONS_DIR**: Ensure environment variable is set
+- **Wrong location**: File must be in `backend/functions/` (not in subdirectories except `examples/`)
 
 ### Dependencies Not Installing
 
@@ -338,7 +351,8 @@ Common issues:
 
 - Restart the application (sync runs at startup)
 - Check file permissions
-- Verify the file is in FUNCTIONS_DIR
+- Verify the file is in `backend/functions/`
+- Check that the file doesn't have syntax errors
 
 ## Migration from Web UI
 
@@ -362,20 +376,28 @@ To migrate existing web-managed functions to filesystem:
            f.write(func['content'])
    ```
 
-3. **Move to FUNCTIONS_DIR**:
+3. **Move to functions directory**:
    ```bash
-   mv *.py $FUNCTIONS_DIR/
+   mv *.py backend/functions/
    ```
 
 4. **Restart**: Open WebUI will sync them
 
 ## Examples
 
-See example function files in the `examples/functions/` directory:
+See example function files in the `backend/functions/examples/` directory:
 - `echo_pipe.py` - Simple echo pipe
 - `sentiment_filter.py` - Sentiment analysis filter
 - `logger_action.py` - Message logging action
 - `api_pipe.py` - External API integration
+
+To use an example:
+```bash
+cd backend/functions
+cp examples/echo_pipe.py my_custom_pipe.py
+# Edit my_custom_pipe.py
+# Restart Open WebUI
+```
 
 ## API Compatibility
 
