@@ -7,10 +7,12 @@ and sync them with the database, enabling IDE-based function development.
 
 import logging
 import re
+import subprocess
+import sys
 from pathlib import Path
 from typing import Optional, Dict, List
 
-from open_webui.env import FUNCTIONS_DIR, SRC_LOG_LEVELS
+from open_webui.env import FUNCTIONS_DIR, SRC_LOG_LEVELS, PIP_OPTIONS, PIP_PACKAGE_INDEX_OPTIONS
 from open_webui.utils.plugin import extract_frontmatter, replace_imports
 
 log = logging.getLogger(__name__)
@@ -55,6 +57,41 @@ def validate_function_id(function_id: str) -> bool:
         True if valid, False otherwise
     """
     return bool(re.match(r'^[a-zA-Z0-9_]+$', function_id))
+
+
+def install_requirements_txt() -> bool:
+    """
+    Check for and install from requirements.txt in FUNCTIONS_DIR.
+
+    Returns:
+        True if requirements.txt was found and processed, False otherwise
+    """
+    if not FUNCTIONS_DIR.exists():
+        return False
+
+    requirements_file = FUNCTIONS_DIR / "requirements.txt"
+
+    if not requirements_file.exists():
+        log.debug(f"No requirements.txt found in {FUNCTIONS_DIR}")
+        return False
+
+    try:
+        log.info(f"Installing dependencies from {requirements_file}")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "-r", str(requirements_file)]
+            + PIP_OPTIONS
+            + PIP_PACKAGE_INDEX_OPTIONS
+        )
+        log.info("Successfully installed requirements from requirements.txt")
+        return True
+
+    except subprocess.CalledProcessError as e:
+        log.error(f"Error installing from requirements.txt: {e}")
+        raise e
+
+    except Exception as e:
+        log.error(f"Unexpected error installing requirements.txt: {e}")
+        raise e
 
 
 def scan_functions_dir() -> List[Dict]:
@@ -169,6 +206,12 @@ def sync_functions_from_filesystem(system_user_id: str = "system") -> Dict[str, 
     """
     # Import here to avoid circular dependency
     from open_webui.models.functions import Functions, FunctionForm, FunctionMeta
+
+    # Install dependencies from requirements.txt if present
+    try:
+        install_requirements_txt()
+    except Exception as e:
+        log.warning(f"Failed to install from requirements.txt: {e}")
 
     # Scan filesystem for functions
     discovered_functions = scan_functions_dir()
