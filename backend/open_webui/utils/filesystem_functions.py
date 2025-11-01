@@ -71,12 +71,8 @@ def scan_functions_dir() -> List[Dict]:
             "meta": dict,        # Extracted frontmatter
         }
     """
-    if not FUNCTIONS_DIR:
-        log.debug("FUNCTIONS_DIR not configured, skipping filesystem scan")
-        return []
-
     if not FUNCTIONS_DIR.exists():
-        log.warning(f"FUNCTIONS_DIR does not exist: {FUNCTIONS_DIR}")
+        log.debug(f"Functions directory does not exist: {FUNCTIONS_DIR}")
         return []
 
     if not FUNCTIONS_DIR.is_dir():
@@ -173,16 +169,6 @@ def sync_functions_from_filesystem(system_user_id: str = "system") -> Dict[str, 
     """
     # Import here to avoid circular dependency
     from open_webui.models.functions import Functions, FunctionForm, FunctionMeta
-
-    if not FUNCTIONS_DIR:
-        log.debug("FUNCTIONS_DIR not configured, skipping sync")
-        return {
-            "scanned": 0,
-            "created": 0,
-            "updated": 0,
-            "unchanged": 0,
-            "errors": [],
-        }
 
     # Scan filesystem for functions
     discovered_functions = scan_functions_dir()

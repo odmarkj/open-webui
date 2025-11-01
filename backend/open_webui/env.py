@@ -267,13 +267,9 @@ if FROM_INIT_PY:
 ####################################
 
 # Directory for filesystem-based function management
-# If set, functions will be loaded from .py files in this directory
-FUNCTIONS_DIR = os.getenv("FUNCTIONS_DIR", "")
-if FUNCTIONS_DIR:
-    FUNCTIONS_DIR = Path(FUNCTIONS_DIR).resolve()
-    log.info(f"FUNCTIONS_DIR: {FUNCTIONS_DIR}")
-else:
-    FUNCTIONS_DIR = None
+# Functions are loaded from .py files in backend/functions/
+FUNCTIONS_DIR = BACKEND_DIR / "functions"
+log.info(f"FUNCTIONS_DIR: {FUNCTIONS_DIR}")
 
 ####################################
 # Database
