@@ -7,8 +7,9 @@ version: 1.0.0
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Callable, Any
 import json
+import asyncio
 
 # Import shared libraries
 from lib.n8n import N8nClient, get_n8n_tools
@@ -184,7 +185,12 @@ class Pipe:
         self.tool_executor.register_tool("create_workflow", create_workflow)
         self.tool_executor.register_tool("execute_workflow", execute_workflow)
 
-    def pipe(self, body: dict, __user__: dict) -> str:
+    async def pipe(
+        self,
+        body: dict,
+        __user__: dict,
+        __event_emitter__: Optional[Callable[[dict], Any]] = None
+    ) -> str:
         """
         Process user messages with tool calling support.
 
@@ -193,19 +199,66 @@ class Pipe:
         Args:
             body: Request body containing messages and other parameters
             __user__: User information dictionary
+            __event_emitter__: Optional event emitter for status updates
 
         Returns:
             str: Response from the agent
         """
+
+        # ============================================================================
+        # EVENT EMITTER EXAMPLE 1: Initial Status Update
+        # ============================================================================
+        # Shows a processing status that's not done yet
+        if __event_emitter__:
+            await __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": "Initializing n8n Workflow Agent...",
+                        "done": False
+                    },
+                }
+            )
+
         # Initialize clients if not already done
         if self.vllm_client is None:
             self._initialize_clients()
+
+            # ========================================================================
+            # EVENT EMITTER EXAMPLE 2: Completion Status Update
+            # ========================================================================
+            # Shows a status that's completed (done: True)
+            if __event_emitter__:
+                await __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": "Clients initialized successfully",
+                            "done": True
+                        },
+                    }
+                )
 
         # Extract messages from body
         messages = body.get("messages", [])
 
         if not messages:
             return "No messages provided."
+
+        # ============================================================================
+        # EVENT EMITTER EXAMPLE 3: Progress Status
+        # ============================================================================
+        # Shows ongoing work
+        if __event_emitter__:
+            await __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": "Preparing conversation with AI model...",
+                        "done": False
+                    },
+                }
+            )
 
         # Add system message if not present
         if not messages or messages[0].get("role") != "system":
@@ -224,6 +277,50 @@ class Pipe:
         tools = get_n8n_tools()
 
         try:
+            # ========================================================================
+            # EVENT EMITTER EXAMPLE 4: Message Update (Streaming Text)
+            # ========================================================================
+            # Shows a partial message being built
+            if __event_emitter__:
+                await __event_emitter__(
+                    {
+                        "type": "message",
+                        "data": {
+                            "content": "🤖 Processing your request with tool calling..."
+                        },
+                    }
+                )
+
+            # ========================================================================
+            # EVENT EMITTER EXAMPLE 5: Citation (Source References)
+            # ========================================================================
+            # Shows sources or references being used
+            if __event_emitter__:
+                await __event_emitter__(
+                    {
+                        "type": "citation",
+                        "data": {
+                            "document": [f"n8n API: {self.valves.n8n_base_url}"],
+                            "metadata": [{"source": "n8n_instance"}],
+                            "source": {"name": "n8n API"}
+                        },
+                    }
+                )
+
+            # ========================================================================
+            # EVENT EMITTER EXAMPLE 6: Status with Tool Information
+            # ========================================================================
+            if __event_emitter__:
+                await __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"Calling vLLM model with {len(tools)} available tools...",
+                            "done": False
+                        },
+                    }
+                )
+
             # Call vLLM with tool support
             result = self.vllm_client.chat_with_tools(
                 messages=messages,
@@ -232,6 +329,35 @@ class Pipe:
                 temperature=self.valves.temperature,
                 max_tokens=self.valves.max_tokens
             )
+
+            # ========================================================================
+            # EVENT EMITTER EXAMPLE 7: Tool Call Notification
+            # ========================================================================
+            # Notify about tool calls that were made
+            if __event_emitter__ and result.get("tool_calls"):
+                tool_count = len(result["tool_calls"])
+                await __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"Executed {tool_count} tool call(s) successfully",
+                            "done": True
+                        },
+                    }
+                )
+
+                # Add citation for each tool call
+                for tool_call in result["tool_calls"]:
+                    await __event_emitter__(
+                        {
+                            "type": "citation",
+                            "data": {
+                                "document": [f"Tool: {tool_call['name']}"],
+                                "metadata": [{"tool": tool_call['name'], "args": tool_call['arguments']}],
+                                "source": {"name": f"n8n API - {tool_call['name']}"}
+                            },
+                        }
+                    )
 
             # Format response
             response = result.get("content", "")
@@ -243,11 +369,40 @@ class Pipe:
                 response += f"Iterations: {result.get('iterations', 0)}\n"
                 response += f"Finish: {result.get('finish_reason', 'unknown')}"
 
+            # ========================================================================
+            # EVENT EMITTER EXAMPLE 8: Final Completion Status
+            # ========================================================================
+            if __event_emitter__:
+                await __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": "Response generated successfully",
+                            "done": True
+                        },
+                    }
+                )
+
             return response
 
         except Exception as e:
             error_msg = f"Error in n8n Workflow Agent: {str(e)}"
             print(error_msg)  # Log to console
+
+            # ========================================================================
+            # EVENT EMITTER EXAMPLE 9: Error Status
+            # ========================================================================
+            if __event_emitter__:
+                await __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"Error: {str(e)}",
+                            "done": True
+                        },
+                    }
+                )
+
             return f"❌ {error_msg}\n\nPlease check:\n" \
                    f"- vLLM is running at {self.valves.vllm_base_url}\n" \
                    f"- n8n is running at {self.valves.n8n_base_url}\n" \
