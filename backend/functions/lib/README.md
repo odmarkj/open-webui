@@ -165,6 +165,54 @@ result = client.chat_with_tools(
 
 **See the [n8n Workflow Agent example](../examples/n8n_workflow_agent.py) for a complete working implementation.**
 
+### `classification.py`
+Prompt classification system with optimal LLM configurations:
+```python
+from lib.classification import (
+    get_classification_config,
+    classify_and_get_config,
+    ClassificationType,
+    LLMModel
+)
+
+# Get configuration for a specific classification
+config = get_classification_config("Code_Generation")
+print(config.llm_model)         # LLMModel.CODE
+print(config.system_prompt)      # Code-specific system prompt
+print(config.temperature)        # 0.2 (low for deterministic code)
+
+# Classify and get full configuration
+result = classify_and_get_config(
+    user_input="Write a Python function to sort a list",
+    classification="Code_Generation"
+)
+print(result["prompt"])          # Formatted master prompt
+print(result["system_prompt"])   # System prompt for model
+print(result["temperature"])     # Optimal temperature
+
+# Supported classifications (30 total):
+# - Question, Instruction, Summarization, Translation
+# - Code_Generation, Code_Explanation, Creative_Writing
+# - Math_Problem, Reasoning, Data_Analysis
+# - Chat_Social, Opinion, Advice
+# - And 17 more specialized types...
+```
+
+**Classifications include:**
+- **Factual**: Question, Explanation, Comparison
+- **Task-based**: Instruction, Code_Generation, Translation
+- **Analysis**: Data_Analysis, Sentiment_Analysis, Classification
+- **Creative**: Creative_Writing, Joke_Humor, Roleplay
+- **Professional**: Legal_Query, Medical_Query, Financial_Advice
+- **Support**: Technical_Support, Academic_Help, Career_Counseling
+
+Each classification includes:
+- Recommended LLM model type (CODE, REASONING, CREATIVE, etc.)
+- Optimized system prompt
+- Master prompt template
+- Temperature and max_tokens settings
+- Example inputs
+
 ## Best Practices
 
 ### 1. Keep Modules Focused
