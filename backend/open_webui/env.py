@@ -263,6 +263,15 @@ if FROM_INIT_PY:
     ).resolve()
 
 ####################################
+# FUNCTIONS
+####################################
+
+# Directory for filesystem-based function management
+# Functions are loaded from .py files in backend/functions/
+FUNCTIONS_DIR = BACKEND_DIR / "functions"
+log.info(f"FUNCTIONS_DIR: {FUNCTIONS_DIR}")
+
+####################################
 # Database
 ####################################
 

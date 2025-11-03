@@ -1,0 +1,33 @@
+# Functions Directory Requirements
+#
+# This file contains Python package dependencies for all functions in this directory.
+# Packages listed here will be automatically installed when Open WebUI starts.
+#
+# Usage:
+#   1. Copy this file to requirements.txt
+#   2. Add your dependencies (one per line)
+#   3. Restart Open WebUI - packages will be installed automatically
+#
+# Format:
+#   package_name==version      # Pin to specific version (recommended)
+#   package_name>=version      # Minimum version
+#   package_name               # Latest version (not recommended for production)
+#
+# Examples:
+#   requests==2.31.0
+#   openai>=1.0.0
+#   pandas==2.0.0
+#   numpy>=1.24.0
+#
+# Common packages for Open WebUI functions:
+#   - requests: HTTP requests
+#   - openai: OpenAI API
+#   - anthropic: Anthropic Claude API
+#   - google-generativeai: Google Gemini API
+#   - pydantic: Data validation
+#   - aiohttp: Async HTTP
+#   - beautifulsoup4: HTML parsing
+#   - python-dateutil: Date utilities
+#
+# Note: Individual functions can also specify requirements in their frontmatter.
+# Those will be installed in addition to packages listed here.
